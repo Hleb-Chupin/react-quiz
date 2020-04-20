@@ -17,12 +17,12 @@ export function auth(email, password, isLogin) {
 
         const expirationDate = new Date(new Date().getTime() + data.expiresIn * 1000)
 
-        localStorage.setItem('token', data.Idtoken)
+        localStorage.setItem('token', data.idToken)
         localStorage.setItem('userId', data.localId)
         localStorage.setItem('expirationDate', expirationDate)
 
-        dispatch(authSuccess(data.Idtoken))
-        dispatch(autoLogoOut(data.expiresIn))
+        dispatch(authSuccess(data.idToken))
+        dispatch(autoLogoout(data.expiresIn))
     }
 }
 
@@ -33,7 +33,7 @@ export function authSuccess(token) {
     }
 }
 
-export function logOut() {
+export function logout() {
     localStorage.removeItem('token')
     localStorage.removeItem('userId')
     localStorage.removeItem('expirationDate')
@@ -42,10 +42,27 @@ export function logOut() {
     }
 }
 
-export function autoLogoOut(time) {
+export function autoLogin() {
+    return dispatch => {
+        const token = localStorage.getItem('token')
+        if (!token) {
+            dispatch(logout())
+        } else {
+            const expirationDate = new Date(localStorage.getItem('expirationDate'))
+            if (expirationDate <= new Date()) {
+                dispatch(logout())
+            } else {
+                dispatch(authSuccess(token))
+                dispatch(autoLogoout((expirationDate.getTime() - new Date().getTime()) / 1000))
+            }
+        }
+    }
+}
+
+export function autoLogoout(time) {
     return dispatch => {
         setTimeout(() => {
-            dispatchEvent(logOut())
+            dispatchEvent(logout())
         }, time * 1000)
     }
 }
